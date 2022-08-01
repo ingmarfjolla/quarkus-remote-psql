@@ -1,0 +1,214 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: fruits-db
+stringData:
+  DB_USER: luke
+  DB_PASSWORD: secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    app.openshift.io/vcs-url: <<unknown>>
+    app.openshift.io/connects-to: postgresql-db
+    app.quarkus/id: "42"
+    foo: bar
+    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+  labels:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+    department: fruity-dept
+    app.openshift.io/runtime: quarkus
+  name: atomic-fruit-service
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+  selector:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+  type: ClusterIP
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  annotations:
+    app.openshift.io/vcs-url: <<unknown>>
+    app.openshift.io/connects-to: postgresql-db
+    app.quarkus/id: "42"
+    foo: bar
+    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+  labels:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+    department: fruity-dept
+    app.openshift.io/runtime: quarkus
+  name: atomic-fruit-service
+spec: {}
+---
+apiVersion: image.openshift.io/v1
+kind: ImageStream
+metadata:
+  labels:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+  name: openjdk-17
+spec:
+  dockerImageRepository: registry.access.redhat.com/ubi8/openjdk-17
+---
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  annotations:
+    app.openshift.io/vcs-url: <<unknown>>
+    app.openshift.io/connects-to: postgresql-db
+    app.quarkus/id: "42"
+    foo: bar
+    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+  labels:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+    department: fruity-dept
+    app.openshift.io/runtime: quarkus
+  name: atomic-fruit-service
+spec:
+  output:
+    to:
+      kind: ImageStreamTag
+      name: atomic-fruit-service:1.0-SNAPSHOT
+  source:
+    binary: {}
+  strategy:
+    sourceStrategy:
+      from:
+        kind: ImageStreamTag
+        name: openjdk-17:1.11
+---
+apiVersion: apps.openshift.io/v1
+kind: DeploymentConfig
+metadata:
+  annotations:
+    app.openshift.io/vcs-url: <<unknown>>
+    app.openshift.io/connects-to: postgresql-db
+    app.quarkus/id: "42"
+    foo: bar
+    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+  labels:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+    department: fruity-dept
+    app.openshift.io/runtime: quarkus
+  name: atomic-fruit-service
+spec:
+  replicas: 1
+  selector:
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+  template:
+    metadata:
+      annotations:
+        app.openshift.io/vcs-url: <<unknown>>
+        app.openshift.io/connects-to: postgresql-db
+        app.quarkus/id: "42"
+        foo: bar
+        app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+      labels:
+        app.kubernetes.io/name: atomic-fruit-service
+        app.kubernetes.io/version: 1.0-SNAPSHOT
+        app.kubernetes.io/part-of: fruit-service-app
+        department: fruity-dept
+        app.openshift.io/runtime: quarkus
+    spec:
+      containers:
+        - command:
+            - java
+            - -jar
+            - /deployments/quarkus-run.jar
+          env:
+            - name: KUBERNETES_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: DB_USER
+                  name: fruits-db
+            - name: QUARKUS_LAUNCH_DEVMODE
+              value: "true"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: DB_PASSWORD
+                  name: fruits-db
+            - name: JAVA_APP_JAR
+              value: /deployments/quarkus-run.jar
+          image: ifjolla/atomic-fruit-service:1.0-SNAPSHOT
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/live
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+          name: atomic-fruit-service
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /q/health/ready
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 0
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 10
+  triggers:
+    - imageChangeParams:
+        automatic: true
+        containerNames:
+          - atomic-fruit-service
+        from:
+          kind: ImageStreamTag
+          name: atomic-fruit-service:1.0-SNAPSHOT
+      type: ImageChange
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    app.openshift.io/vcs-url: <<unknown>>
+    app.openshift.io/connects-to: postgresql-db
+    app.quarkus/id: "42"
+    foo: bar
+    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+  labels:
+    app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
+    app.kubernetes.io/version: 1.0-SNAPSHOT
+    department: fruity-dept
+    app.openshift.io/runtime: quarkus
+  name: atomic-fruit-service
+spec:
+  port:
+    targetPort: 8080
+  to:
+    kind: Service
+    name: atomic-fruit-service
