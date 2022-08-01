@@ -15,7 +15,8 @@ metadata:
     app.openshift.io/connects-to: postgresql-db
     app.quarkus/id: "42"
     foo: bar
-    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+    app.quarkus.io/commit-id: 55e49690be45e53f393bbf72a583d552bca0b0cb
+    app.quarkus.io/build-timestamp: 2022-08-01 - 03:53:14 +0000
   labels:
     app.kubernetes.io/name: atomic-fruit-service
     app.kubernetes.io/part-of: fruit-service-app
@@ -42,7 +43,8 @@ metadata:
     app.openshift.io/connects-to: postgresql-db
     app.quarkus/id: "42"
     foo: bar
-    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+    app.quarkus.io/commit-id: 55e49690be45e53f393bbf72a583d552bca0b0cb
+    app.quarkus.io/build-timestamp: 2022-08-01 - 03:53:14 +0000
   labels:
     app.kubernetes.io/name: atomic-fruit-service
     app.kubernetes.io/part-of: fruit-service-app
@@ -59,9 +61,9 @@ metadata:
     app.kubernetes.io/name: atomic-fruit-service
     app.kubernetes.io/part-of: fruit-service-app
     app.kubernetes.io/version: 1.0-SNAPSHOT
-  name: openjdk-17
+  name: s2i-java
 spec:
-  dockerImageRepository: registry.access.redhat.com/ubi8/openjdk-17
+  dockerImageRepository: fabric8/s2i-java
 ---
 apiVersion: build.openshift.io/v1
 kind: BuildConfig
@@ -71,7 +73,8 @@ metadata:
     app.openshift.io/connects-to: postgresql-db
     app.quarkus/id: "42"
     foo: bar
-    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+    app.quarkus.io/commit-id: 55e49690be45e53f393bbf72a583d552bca0b0cb
+    app.quarkus.io/build-timestamp: 2022-08-01 - 03:53:14 +0000
   labels:
     app.kubernetes.io/name: atomic-fruit-service
     app.kubernetes.io/part-of: fruit-service-app
@@ -90,7 +93,7 @@ spec:
     sourceStrategy:
       from:
         kind: ImageStreamTag
-        name: openjdk-17:1.11
+        name: s2i-java:2.3
 ---
 apiVersion: apps.openshift.io/v1
 kind: DeploymentConfig
@@ -100,7 +103,8 @@ metadata:
     app.openshift.io/connects-to: postgresql-db
     app.quarkus/id: "42"
     foo: bar
-    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+    app.quarkus.io/commit-id: 55e49690be45e53f393bbf72a583d552bca0b0cb
+    app.quarkus.io/build-timestamp: 2022-08-01 - 03:53:14 +0000
   labels:
     app.kubernetes.io/name: atomic-fruit-service
     app.kubernetes.io/part-of: fruit-service-app
@@ -111,8 +115,8 @@ metadata:
 spec:
   replicas: 1
   selector:
-    app.kubernetes.io/part-of: fruit-service-app
     app.kubernetes.io/name: atomic-fruit-service
+    app.kubernetes.io/part-of: fruit-service-app
     app.kubernetes.io/version: 1.0-SNAPSHOT
   template:
     metadata:
@@ -121,29 +125,23 @@ spec:
         app.openshift.io/connects-to: postgresql-db
         app.quarkus/id: "42"
         foo: bar
-        app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+        app.quarkus.io/commit-id: 55e49690be45e53f393bbf72a583d552bca0b0cb
+        app.quarkus.io/build-timestamp: 2022-08-01 - 03:53:14 +0000
       labels:
         app.kubernetes.io/name: atomic-fruit-service
-        app.kubernetes.io/version: 1.0-SNAPSHOT
         app.kubernetes.io/part-of: fruit-service-app
+        app.kubernetes.io/version: 1.0-SNAPSHOT
         department: fruity-dept
         app.openshift.io/runtime: quarkus
     spec:
       containers:
-        - command:
-            - java
-            - -jar
-            - /deployments/quarkus-run.jar
-          env:
+        - env:
             - name: KUBERNETES_NAMESPACE
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
-            - name: DB_USER
-              valueFrom:
-                secretKeyRef:
-                  key: DB_USER
-                  name: fruits-db
+            - name: JAVA_APP_JAR
+              value: /deployments/quarkus-application-runner.jar
             - name: QUARKUS_LAUNCH_DEVMODE
               value: "true"
             - name: DB_PASSWORD
@@ -151,8 +149,11 @@ spec:
                 secretKeyRef:
                   key: DB_PASSWORD
                   name: fruits-db
-            - name: JAVA_APP_JAR
-              value: /deployments/quarkus-run.jar
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  key: DB_USER
+                  name: fruits-db
           image: ifjolla/atomic-fruit-service:1.0-SNAPSHOT
           imagePullPolicy: Always
           livenessProbe:
@@ -198,7 +199,8 @@ metadata:
     app.openshift.io/connects-to: postgresql-db
     app.quarkus/id: "42"
     foo: bar
-    app.quarkus.io/build-timestamp: 2022-08-01 - 02:35:42 +0000
+    app.quarkus.io/commit-id: 55e49690be45e53f393bbf72a583d552bca0b0cb
+    app.quarkus.io/build-timestamp: 2022-08-01 - 03:53:14 +0000
   labels:
     app.kubernetes.io/name: atomic-fruit-service
     app.kubernetes.io/part-of: fruit-service-app
