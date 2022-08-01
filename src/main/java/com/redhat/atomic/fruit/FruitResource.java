@@ -35,7 +35,14 @@ public class FruitResource {
         logger.debug("Hello method is called with message: " + this.message); // logging & custom property
         return message; // custom property
     }
-    
+//    @GET
+//    @Path("goodbye")
+//    @Produces(MediaType.TEXT_PLAIN)
+//    public String goodbye() {
+//        logger.debug("Hello method is called with message: " + this.message); // logging & custom property
+//        return message; // custom property
+//    }
+//
     @GET
     public List<Fruit> allFruits() {
         return Fruit.listAll(); 

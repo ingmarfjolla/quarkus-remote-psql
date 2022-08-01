@@ -17,8 +17,8 @@
       "app.openshift.io/connects-to" : "postgresql-db",
       "app.quarkus/id" : "42",
       "foo" : "bar",
-      "app.quarkus.io/commit-id" : "55e49690be45e53f393bbf72a583d552bca0b0cb",
-      "app.quarkus.io/build-timestamp" : "2022-08-01 - 03:53:14 +0000"
+      "app.quarkus.io/commit-id" : "cd443b1937bab588544fe4121502a00eb8b52df5",
+      "app.quarkus.io/build-timestamp" : "2022-08-01 - 04:39:33 +0000"
     },
     "labels" : {
       "app.kubernetes.io/name" : "atomic-fruit-service",
@@ -51,8 +51,8 @@
       "app.openshift.io/connects-to" : "postgresql-db",
       "app.quarkus/id" : "42",
       "foo" : "bar",
-      "app.quarkus.io/commit-id" : "55e49690be45e53f393bbf72a583d552bca0b0cb",
-      "app.quarkus.io/build-timestamp" : "2022-08-01 - 03:53:14 +0000"
+      "app.quarkus.io/commit-id" : "cd443b1937bab588544fe4121502a00eb8b52df5",
+      "app.quarkus.io/build-timestamp" : "2022-08-01 - 04:39:33 +0000"
     },
     "labels" : {
       "app.kubernetes.io/name" : "atomic-fruit-service",
@@ -73,10 +73,10 @@
       "app.kubernetes.io/part-of" : "fruit-service-app",
       "app.kubernetes.io/version" : "1.0-SNAPSHOT"
     },
-    "name" : "s2i-java"
+    "name" : "openjdk-17"
   },
   "spec" : {
-    "dockerImageRepository" : "fabric8/s2i-java"
+    "dockerImageRepository" : "registry.access.redhat.com/ubi8/openjdk-17"
   }
 },{
   "apiVersion" : "build.openshift.io/v1",
@@ -87,8 +87,8 @@
       "app.openshift.io/connects-to" : "postgresql-db",
       "app.quarkus/id" : "42",
       "foo" : "bar",
-      "app.quarkus.io/commit-id" : "55e49690be45e53f393bbf72a583d552bca0b0cb",
-      "app.quarkus.io/build-timestamp" : "2022-08-01 - 03:53:14 +0000"
+      "app.quarkus.io/commit-id" : "cd443b1937bab588544fe4121502a00eb8b52df5",
+      "app.quarkus.io/build-timestamp" : "2022-08-01 - 04:39:33 +0000"
     },
     "labels" : {
       "app.kubernetes.io/name" : "atomic-fruit-service",
@@ -113,7 +113,7 @@
       "sourceStrategy" : {
         "from" : {
           "kind" : "ImageStreamTag",
-          "name" : "s2i-java:2.3"
+          "name" : "openjdk-17:1.11"
         }
       }
     }
@@ -127,8 +127,8 @@
       "app.openshift.io/connects-to" : "postgresql-db",
       "app.quarkus/id" : "42",
       "foo" : "bar",
-      "app.quarkus.io/commit-id" : "55e49690be45e53f393bbf72a583d552bca0b0cb",
-      "app.quarkus.io/build-timestamp" : "2022-08-01 - 03:53:14 +0000"
+      "app.quarkus.io/commit-id" : "cd443b1937bab588544fe4121502a00eb8b52df5",
+      "app.quarkus.io/build-timestamp" : "2022-08-01 - 04:39:33 +0000"
     },
     "labels" : {
       "app.kubernetes.io/name" : "atomic-fruit-service",
@@ -153,19 +153,20 @@
           "app.openshift.io/connects-to" : "postgresql-db",
           "app.quarkus/id" : "42",
           "foo" : "bar",
-          "app.quarkus.io/commit-id" : "55e49690be45e53f393bbf72a583d552bca0b0cb",
-          "app.quarkus.io/build-timestamp" : "2022-08-01 - 03:53:14 +0000"
+          "app.quarkus.io/commit-id" : "cd443b1937bab588544fe4121502a00eb8b52df5",
+          "app.quarkus.io/build-timestamp" : "2022-08-01 - 04:39:33 +0000"
         },
         "labels" : {
+          "app.kubernetes.io/version" : "1.0-SNAPSHOT",
           "app.kubernetes.io/name" : "atomic-fruit-service",
           "app.kubernetes.io/part-of" : "fruit-service-app",
-          "app.kubernetes.io/version" : "1.0-SNAPSHOT",
           "department" : "fruity-dept",
           "app.openshift.io/runtime" : "quarkus"
         }
       },
       "spec" : {
         "containers" : [ {
+          "command" : [ "java", "-jar", "/deployments/quarkus-run.jar" ],
           "env" : [ {
             "name" : "KUBERNETES_NAMESPACE",
             "valueFrom" : {
@@ -174,11 +175,16 @@
               }
             }
           }, {
-            "name" : "JAVA_APP_JAR",
-            "value" : "/deployments/quarkus-application-runner.jar"
+            "name" : "QUARKUS_PROFILE",
+            "value" : "prod-postgresql"
           }, {
-            "name" : "QUARKUS_LAUNCH_DEVMODE",
-            "value" : "true"
+            "name" : "DB_USER",
+            "valueFrom" : {
+              "secretKeyRef" : {
+                "key" : "DB_USER",
+                "name" : "fruits-db"
+              }
+            }
           }, {
             "name" : "DB_PASSWORD",
             "valueFrom" : {
@@ -188,13 +194,11 @@
               }
             }
           }, {
-            "name" : "DB_USER",
-            "valueFrom" : {
-              "secretKeyRef" : {
-                "key" : "DB_USER",
-                "name" : "fruits-db"
-              }
-            }
+            "name" : "QUARKUS_LAUNCH_DEVMODE",
+            "value" : "true"
+          }, {
+            "name" : "JAVA_APP_JAR",
+            "value" : "/deployments/quarkus-run.jar"
           } ],
           "image" : "ifjolla/atomic-fruit-service:1.0-SNAPSHOT",
           "imagePullPolicy" : "Always",
@@ -252,8 +256,8 @@
       "app.openshift.io/connects-to" : "postgresql-db",
       "app.quarkus/id" : "42",
       "foo" : "bar",
-      "app.quarkus.io/commit-id" : "55e49690be45e53f393bbf72a583d552bca0b0cb",
-      "app.quarkus.io/build-timestamp" : "2022-08-01 - 03:53:14 +0000"
+      "app.quarkus.io/commit-id" : "cd443b1937bab588544fe4121502a00eb8b52df5",
+      "app.quarkus.io/build-timestamp" : "2022-08-01 - 04:39:33 +0000"
     },
     "labels" : {
       "app.kubernetes.io/name" : "atomic-fruit-service",
